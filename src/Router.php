@@ -388,8 +388,6 @@ class Router implements RouterInterface, SingletonInterface
      * @param array $args
      * @return RouteItem
      * @throws RouterException
-     * @throws \ReflectionException
-     * @throws \VS\General\Exceptions\ClassNotFoundException
      */
     private function parseValue($activeRoute, array $args = []): RouteItem
     {
@@ -422,8 +420,6 @@ class Router implements RouterInterface, SingletonInterface
      * @param $activeRoute
      * @return mixed|string
      * @throws RouterException
-     * @throws \ReflectionException
-     * @throws \VS\General\Exceptions\ClassNotFoundException
      */
     private function resolveDestination($activeRoute)
     {
