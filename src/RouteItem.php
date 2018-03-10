@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: user
- * Date: 3/10/2018
- * Time: 9:52 AM
- */
 
 namespace VS\Router;
 
