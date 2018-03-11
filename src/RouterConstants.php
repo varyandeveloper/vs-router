@@ -2,8 +2,6 @@
 
 namespace VS\Router;
 
-use Psr\Log\InvalidArgumentException;
-
 /**
  * Class RouterConstants
  * @package VS\Router
@@ -95,7 +93,7 @@ class RouterConstants
         $message = self::$messages[$lang][$code] ?? self::MESSAGES[self::DEFAULT_LANGUAGE][$code] ?? false;
 
         if (!$message) {
-            throw new InvalidArgumentException(sprintf(
+            throw new \InvalidArgumentException(sprintf(
                 'Router message not found in %s',
                 __CLASS__
             ));
