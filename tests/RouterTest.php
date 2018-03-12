@@ -2,6 +2,7 @@
 
 /**
  * Class RouterTest
+ * @author Varazdat Stepanyan
  */
 class RouterTest extends \PHPUnit\Framework\TestCase
 {
