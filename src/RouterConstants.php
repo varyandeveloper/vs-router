@@ -173,4 +173,15 @@ class RouterConstants
 
         return array_search(strtoupper($method), self::$allowedMethods) !== false;
     }
+
+    /**
+     * @param array $allowedMethods
+     */
+    public static function setAllowedMethods(array $allowedMethods): void
+    {
+        self::$allowedMethods = [];
+        foreach ($allowedMethods as $allowedMethod) {
+            self::$allowedMethods[] = strtoupper($allowedMethod);
+        }
+    }
 }
