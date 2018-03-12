@@ -81,4 +81,11 @@ interface RouterInterface
      * @return array
      */
     public function getRoutes(): array;
+
+    /**
+     * Reset routes list
+     *
+     * @return void
+     */
+    public function reset();
 }

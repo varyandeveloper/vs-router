@@ -94,14 +94,15 @@ class Router implements RouterInterface, SingletonInterface
     public function CRUD(string $prefix, string $controller): RouterInterface
     {
         $this->prefix($prefix, function (RouterInterface $router) use ($controller) {
+            $argument = sprintf('/%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
             $router->get('/', "$controller.index")
                 ->post('/', "$controller.store")
                 ->get('/create', "$controller.create")
-                ->put('/(n)', "$controller.update")
-                ->patch('/(n)', "$controller.update")
-                ->get('/(n)', "$controller.show")
-                ->get('/(n)/edit', "$controller.edit")
-                ->delete('/(n)', "$controller.destroy");
+                ->put($argument, "$controller.update")
+                ->patch($argument, "$controller.update")
+                ->get($argument, "$controller.show")
+                ->get("/{$argument}/edit", "$controller.edit")
+                ->delete($argument, "$controller.destroy");
         });
 
         return $this;
@@ -114,15 +115,14 @@ class Router implements RouterInterface, SingletonInterface
      */
     public function REST(string $prefix, string $controller): RouterInterface
     {
-        $this->prefix('api', function (RouterInterface $router) use ($controller, $prefix) {
-            $router->prefix($prefix, function (RouterInterface $router) use ($controller) {
-                $router->get('/', "$controller.list")
-                    ->get('/(n)', "$controller.one")
-                    ->post('/', "$controller.save")
-                    ->put('/(n)', "$controller.replace")
-                    ->patch('/(n)', "$controller.replaceFew")
-                    ->delete('/(n)', "$controller.remove");
-            });
+        $this->prefix($prefix, function (RouterInterface $router) use ($controller) {
+            $argument = sprintf('/%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
+            $router->get('/', "$controller.list")
+                ->get($argument, "$controller.one")
+                ->post('/', "$controller.save")
+                ->put($argument, "$controller.replace")
+                ->patch($argument, "$controller.replaceFew")
+                ->delete($argument, "$controller.remove");
         });
 
         return $this;
@@ -186,6 +186,7 @@ class Router implements RouterInterface, SingletonInterface
      */
     public function prefix(string $prefix, callable $callback): RouterInterface
     {
+        $prefix = ltrim($prefix, '/');
         if (!empty($prefix)) {
             $this->prefixes[] = $prefix;
         }
@@ -260,6 +261,14 @@ class Router implements RouterInterface, SingletonInterface
         $this->routeList[$method][$piecesCount][$pattern] = $destination;
         $this->lastUsedPattern = $pattern;
         return $this;
+    }
+
+    /**
+     * @return void
+     */
+    public function reset()
+    {
+        $this->routeList = [];
     }
 
     /**
