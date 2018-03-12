@@ -184,4 +184,42 @@ class RouterTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($excepted, $actual);
     }
+
+    public function testAddNewMethodsDynamically()
+    {
+        $methods = ['cli'];
+
+        \VS\Router\RouterConstants::setAllowedMethods($methods);
+
+        $this->Router->cli('/test', function (){
+            // logic here for cli route
+        });
+
+        $excepted = [
+            'CLI' => [
+                1 => [
+                    '/test' => function(){}
+                ]
+            ]
+        ];
+
+        $actual = $this->Router->getRoutes();
+
+        $this->assertEquals($excepted, $actual);
+        $this->expectException(BadMethodCallException::class);
+        $this->Router->options('/done', 'TestCtrl');
+
+        $methods[] = 'options';
+
+        $this->Router->options('/cool', 'Tested');
+
+        $excepted['OPTIONS'] = [
+            1 => [
+                '/cool' => 'Tested'
+            ]
+        ];
+        $actual = $this->Router->getRoutes();
+
+        $this->assertEquals($excepted, $actual);
+    }
 }
