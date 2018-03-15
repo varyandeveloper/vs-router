@@ -308,7 +308,7 @@ class Router implements RouterInterface, SingletonInterface
     private function getCurrent(array $alias = null): RouteItem
     {
         if (null === $alias) {
-            $currentUrl = $this->Url->current();
+            $currentUrl = $this->getResolvedUrl();
             $piecesCount = $this->getPiecesCount($currentUrl);
             $method = $this->Request->method();
         } else {
@@ -317,25 +317,14 @@ class Router implements RouterInterface, SingletonInterface
             $method = $alias['method'];
         }
 
-        if (empty($this->routeList)) {
-            throw new RouterException(sprintf(
-                RouterConstants::getMessage(RouterConstants::INVALID_ROUTE_CODE),
-                $currentUrl
-            ));
+        $this->makeSureRouteListIsNotEmpty($currentUrl);
+        $this->checkMinimumRequirements($method, $piecesCount);
+
+        if (empty($this->routeList[$method][$piecesCount][$currentUrl])) {
+            return $this->advancedRoute($currentUrl, $this->routeList[$method][$piecesCount]);
         }
 
-        if (!empty($this->routeList[$method][$piecesCount])) {
-            if (!empty($this->routeList[$method][$piecesCount][$currentUrl])) {
-                return $this->parseValue($this->routeList[$method][$piecesCount][$currentUrl]);
-            }
-            try {
-                return $this->advancedRoute($currentUrl, $this->routeList[$method][$piecesCount]);
-            } catch (\Throwable $exception) {
-                throw $exception;
-            }
-        }
-
-        throw new RouterException('Route not found');
+        return $this->parseValue($this->routeList[$method][$piecesCount][$currentUrl]);
     }
 
     /**
@@ -467,5 +456,46 @@ class Router implements RouterInterface, SingletonInterface
         $route .= $activeRoute['method'] ?? 'index';
 
         return $route;
+    }
+
+    /**
+     * @param string $currentUrl
+     * @throws RouterException
+     */
+    private function makeSureRouteListIsNotEmpty(string $currentUrl)
+    {
+        if (empty($this->routeList)) {
+            throw new RouterException(sprintf(
+                RouterConstants::getMessage(RouterConstants::INVALID_ROUTE_CODE),
+                $currentUrl
+            ));
+        }
+    }
+
+    /**
+     * @param string $method
+     * @param int $piecesCount
+     * @throws RouterException
+     */
+    private function checkMinimumRequirements(string $method, int $piecesCount)
+    {
+        if (empty($this->routeList[$method][$piecesCount])) {
+            throw new RouterException('Route not found');
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function getResolvedUrl(): string
+    {
+        $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
+        $currentUrl = $this->Url->current();
+        if (!empty($removePrefixFromUrl)) {
+            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl), strlen($removePrefixFromUrl));
+            $currentUrl = str_replace('//', '/', $currentUrl);
+        }
+
+        return $currentUrl;
     }
 }

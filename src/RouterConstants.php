@@ -69,6 +69,10 @@ class RouterConstants
      * @var array $allowedMethods
      */
     protected static $allowedMethods = [];
+    /**
+     * @var array $segmentsToAvoid
+     */
+    protected static $segmentsToAvoid = [];
 
     /**
      * @param array $messages
@@ -183,5 +187,29 @@ class RouterConstants
         foreach ($allowedMethods as $allowedMethod) {
             self::$allowedMethods[] = strtoupper($allowedMethod);
         }
+    }
+
+    /**
+     * @param array $segmentsToAvoid
+     */
+    public static function setSegmentsToAvoid(array $segmentsToAvoid): void
+    {
+        self::$segmentsToAvoid = $segmentsToAvoid;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getSegmentsToAvoid(): array
+    {
+        return self::$segmentsToAvoid;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getSegmentsToAvoidAsString(): string
+    {
+        return implode('/', self::$segmentsToAvoid);
     }
 }
