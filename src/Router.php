@@ -6,8 +6,6 @@ use VS\General\DIFactory;
 use VS\General\Singleton\{
     SingletonInterface, SingletonTrait
 };
-use VS\Request\RequestInterface;
-use VS\Url\UrlInterface;
 
 /**
  * Class Router
@@ -19,13 +17,13 @@ class Router implements RouterInterface, SingletonInterface
     use SingletonTrait;
 
     /**
-     * @var RequestInterface $Request
+     * @var string $requestMethod
      */
-    protected $Request;
+    protected $requestMethod;
     /**
-     * @var UrlInterface $Url
+     * @var string $url
      */
-    protected $Url;
+    protected $url;
     /**
      * @var array $prefixes
      */
@@ -65,13 +63,13 @@ class Router implements RouterInterface, SingletonInterface
 
     /**
      * Router constructor.
-     * @param UrlInterface $url
-     * @param RequestInterface $request
+     * @param string $url
+     * @param string $requestMethod
      */
-    private function __construct(UrlInterface $url, RequestInterface $request)
+    private function __construct(string $url, string $requestMethod)
     {
-        $this->Url = $url;
-        $this->Request = $request;
+        $this->url = $url;
+        $this->requestMethod = $requestMethod;
     }
 
     /**
@@ -310,7 +308,7 @@ class Router implements RouterInterface, SingletonInterface
         if (null === $alias) {
             $currentUrl = $this->getResolvedUrl();
             $piecesCount = $this->getPiecesCount($currentUrl);
-            $method = $this->Request->method();
+            $method = $this->requestMethod;
         } else {
             $currentUrl = $alias['pattern'];
             $piecesCount = $alias['piecesCount'];
@@ -490,9 +488,8 @@ class Router implements RouterInterface, SingletonInterface
     private function getResolvedUrl(): string
     {
         $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
-        $currentUrl = $this->Url->current();
         if (!empty($removePrefixFromUrl)) {
-            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl), strlen($removePrefixFromUrl));
+            $currentUrl = substr_replace($this->url, '', strpos($this->url, $removePrefixFromUrl), strlen($removePrefixFromUrl));
             $currentUrl = str_replace('//', '/', $currentUrl);
         }
 
