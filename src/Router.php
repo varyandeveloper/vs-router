@@ -487,9 +487,10 @@ class Router implements RouterInterface, SingletonInterface
      */
     private function getResolvedUrl(): string
     {
+        $currentUrl = $this->url;
         $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
         if (!empty($removePrefixFromUrl)) {
-            $currentUrl = substr_replace($this->url, '', strpos($this->url, $removePrefixFromUrl), strlen($removePrefixFromUrl));
+            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl), strlen($removePrefixFromUrl));
             $currentUrl = str_replace('//', '/', $currentUrl);
         }
 
