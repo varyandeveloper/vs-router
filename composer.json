@@ -5,8 +5,6 @@
   "homepage": "https://github.com/varyandeveloper/vs-router",
   "require": {
     "php": "^7.2",
-    "vs/url": "dev-master",
-    "vs/request": "dev-master",
     "vs/general": "dev-master"
   },
   "require-dev": {
