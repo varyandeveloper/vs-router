@@ -171,10 +171,7 @@ class RouterConstants
      */
     public static function isMethodAllowed(string $method): bool
     {
-        if (!count(self::$allowedMethods)) {
-            self::$allowedMethods = self::ALLOWED_METHODS;
-        }
-
+        self::$allowedMethods = array_merge(self::$allowedMethods, self::ALLOWED_METHODS);
         return array_search(strtoupper($method), self::$allowedMethods) !== false;
     }
 
