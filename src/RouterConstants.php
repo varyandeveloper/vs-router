@@ -13,11 +13,13 @@ class RouterConstants
     const INVALID_CALLABLE_CODE = 2;
     const INVALID_ALIAS_CODE = 3;
     const INVALID_ROUTE_CODE = 4;
+    const INVALID_TO_STRING_METHOD_CODE = 5;
 
     const INVALID_ARRAY_MESSAGE = 'Array structured route should have 0 index as controller name or controller => controllerName pairs.';
     const INVALID_CALLABLE_MESSAGE = 'Callable structured array response should return string like NameController@NameMethod or Array.';
     const INVALID_ALIAS_MESSAGE = 'The route alias %s not found.';
     const INVALID_ROUTE_MESSAGE = 'The route %s not found.';
+    const INVALID_TO_STRING_METHOD_MESSAGE = 'The object %s dose not have __toString method';
 
     const DYNAMIC_ARGUMENT_DETECTION_KEY = '(';
     const NUMBER_ARGUMENT_ALIAS = '(n)';
@@ -34,6 +36,7 @@ class RouterConstants
             self::INVALID_CALLABLE_CODE => self::INVALID_CALLABLE_MESSAGE,
             self::INVALID_ALIAS_CODE => self::INVALID_ALIAS_MESSAGE,
             self::INVALID_ROUTE_CODE => self::INVALID_ROUTE_MESSAGE,
+            self::INVALID_TO_STRING_METHOD_CODE => self::INVALID_TO_STRING_METHOD_MESSAGE
         ]
     ];
     protected const ALLOWED_METHODS = [

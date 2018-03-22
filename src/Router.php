@@ -391,7 +391,14 @@ class Router implements RouterInterface, SingletonInterface
         $activeRoute = $this->resolveDestination($activeRoute);
 
         if (is_object($activeRoute)) {
-            $this->controller = $activeRoute;
+            if(method_exists($activeRoute, '__toString')){
+                print $activeRoute;
+                exit;
+            }
+            throw new \InvalidArgumentException(sprintf(
+                RouterConstants::getMessage(RouterConstants::INVALID_TO_STRING_METHOD_CODE),
+                get_class($activeRoute)
+            ), RouterConstants::INVALID_TO_STRING_METHOD_CODE);
         } else {
             $activeRoute = str_replace(['@', '.'], '/', $activeRoute);
             $valueParts = explode('/', $activeRoute);
