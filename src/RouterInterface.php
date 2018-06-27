@@ -2,6 +2,8 @@
 
 namespace VS\Router;
 
+use VS\Router\RouteItem\RouteItemInterface;
+
 /**
  * Interface RouterInterface
  * @package VS\Router
@@ -63,6 +65,12 @@ interface RouterInterface
      * @return RouterInterface
      */
     public function namespace(string $namespace, \Closure $callback): RouterInterface;
+
+    /**
+     * @param MiddlewareInterface ...$middleware
+     * @return RouterInterface
+     */
+    public function middleware(MiddlewareInterface ...$middleware): RouterInterface;
 
     /**
      * @param string $method

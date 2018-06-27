@@ -22,12 +22,13 @@ class RouterConstants
     const INVALID_TO_STRING_METHOD_MESSAGE = 'The object %s dose not have __toString method';
 
     const DYNAMIC_ARGUMENT_DETECTION_KEY = '(';
+    const ANY_ARGUMENT_ALIAS = '(*)';
     const NUMBER_ARGUMENT_ALIAS = '(n)';
     const STRING_ARGUMENT_ALIAS = '(s)';
 
-    const DYNAMIC_ARGUMENT_REGEX = '/\((.*?)\)/';
-    const NUMBER_ARGUMENT_REGEX = '/[0-9]/';
-    const STRING_ARGUMENT_REGEX = '/[A-Za-z0-9]/';
+    const ANY_ARGUMENT_REGEX = '/\((.*?)\)/';
+    const NUMBER_ARGUMENT_REGEX = '/^[0-9]+$/';
+    const STRING_ARGUMENT_REGEX = '/^\d+$/';
 
     protected const DEFAULT_LANGUAGE = 'en';
     protected const MESSAGES = [
@@ -48,6 +49,7 @@ class RouterConstants
     ];
 
     protected const ARGUMENT_ALIASES = [
+        self::ANY_ARGUMENT_ALIAS => self::ANY_ARGUMENT_REGEX,
         self::NUMBER_ARGUMENT_ALIAS => self::NUMBER_ARGUMENT_REGEX,
         self::STRING_ARGUMENT_ALIAS => self::STRING_ARGUMENT_REGEX,
     ];
@@ -126,7 +128,7 @@ class RouterConstants
         $argument = self::$argumentAliases[$alias] ?? self::ARGUMENT_ALIASES[$alias] ?? false;
 
         if (!$argument) {
-            throw new InvalidArgumentException(sprintf(
+            throw new \InvalidArgumentException(sprintf(
                 'Alias with code %s not register in %s',
                 $alias,
                 __CLASS__
@@ -165,7 +167,7 @@ class RouterConstants
      */
     public static function getDynamicArgumentRegex(): string
     {
-        return self::$dynamicArgumentRegex ?? self::DYNAMIC_ARGUMENT_REGEX;
+        return self::$dynamicArgumentRegex ?? self::ANY_ARGUMENT_REGEX;
     }
 
     /**

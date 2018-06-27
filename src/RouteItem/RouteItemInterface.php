@@ -1,6 +1,8 @@
 <?php
 
-namespace VS\Router;
+namespace VS\Router\RouteItem;
+
+use VS\Router\MiddlewareInterface;
 
 /**
  * Interface RouteItemInterface
@@ -18,6 +20,11 @@ interface RouteItemInterface
     public function __construct(string $ctrl, string $method, array $params);
 
     /**
+     * @return null|string
+     */
+    public function getNamespace(): ?string;
+
+    /**
      * @return string
      */
     public function getController(): string;
@@ -31,4 +38,9 @@ interface RouteItemInterface
      * @return array
      */
     public function getParams(): array;
+
+    /**
+     * @return MiddlewareInterface[]
+     */
+    public function getMiddleware(): array;
 }

@@ -3,8 +3,11 @@
 namespace VS\Router;
 
 use VS\General\DIFactory;
-use VS\General\Singleton\{
-    SingletonInterface, SingletonTrait
+use VS\General\Exceptions\ClassNotFoundException;
+use VS\Url\UrlInterface;
+use VS\Request\RequestInterface;
+use VS\Router\RouteItem\{
+    RouteItem, RouteItemInterface
 };
 
 /**
@@ -12,16 +15,14 @@ use VS\General\Singleton\{
  * @package VS\Router
  * @author Varazdat Stepanyan
  */
-class Router implements RouterInterface, SingletonInterface
+class Router implements RouterInterface
 {
-    use SingletonTrait;
-
     /**
-     * @var string $requestMethod
+     * @var RequestInterface $request
      */
-    protected $requestMethod;
+    protected $request;
     /**
-     * @var string $url
+     * @var UrlInterface $url
      */
     protected $url;
     /**
@@ -35,7 +36,7 @@ class Router implements RouterInterface, SingletonInterface
     /**
      * @var array $routeList
      */
-    private $routeList = [];
+    private static $routeList = [];
     /**
      * @var string $controller
      */
@@ -57,19 +58,23 @@ class Router implements RouterInterface, SingletonInterface
      */
     private $lastUsedPattern;
     /**
-     * @var RouteItem $routeItem
+     * @var RouterInterface $routeItem
      */
     private $routeItem;
+    /**
+     * @var MiddlewareInterface[] $middleware
+     */
+    private $middleware = [];
 
     /**
      * Router constructor.
-     * @param string $url
-     * @param string $requestMethod
+     * @param UrlInterface $url
+     * @param RequestInterface $request
      */
-    private function __construct(string $url, string $requestMethod)
+    public function __construct(UrlInterface $url, RequestInterface $request)
     {
         $this->url = $url;
-        $this->requestMethod = $requestMethod;
+        $this->request = $request;
     }
 
     /**
@@ -85,6 +90,16 @@ class Router implements RouterInterface, SingletonInterface
     }
 
     /**
+     * @param MiddlewareInterface ...$middleware
+     * @return RouterInterface
+     */
+    public function middleware(MiddlewareInterface ...$middleware): RouterInterface
+    {
+        $this->middleware = $middleware;
+        return $this;
+    }
+
+    /**
      * @param string $prefix
      * @param string $controller
      * @return RouterInterface
@@ -92,14 +107,14 @@ class Router implements RouterInterface, SingletonInterface
     public function CRUD(string $prefix, string $controller): RouterInterface
     {
         $this->prefix($prefix, function (RouterInterface $router) use ($controller) {
-            $argument = sprintf('/%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
+            $argument = sprintf('\%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
             $router->get('/', "$controller.index")
                 ->post('/', "$controller.store")
                 ->get('/create', "$controller.create")
                 ->put($argument, "$controller.update")
                 ->patch($argument, "$controller.update")
                 ->get($argument, "$controller.show")
-                ->get("/{$argument}/edit", "$controller.edit")
+                ->get("{$argument}/edit", "$controller.edit")
                 ->delete($argument, "$controller.destroy");
         });
 
@@ -167,7 +182,7 @@ class Router implements RouterInterface, SingletonInterface
         $patterns = [];
 
         while ($count--) {
-            $patterns[] = RouterConstants::DYNAMIC_ARGUMENT_REGEX;
+            $patterns[] = RouterConstants::ANY_ARGUMENT_REGEX;
         }
 
         if (!empty($params)) {
@@ -213,7 +228,7 @@ class Router implements RouterInterface, SingletonInterface
      */
     public function getRoutes(): array
     {
-        return $this->routeList;
+        return static::$routeList;
     }
 
     /**
@@ -256,7 +271,7 @@ class Router implements RouterInterface, SingletonInterface
             $destination = implode('\\', $this->namespaces) . '\\' . $destination;
         }
 
-        $this->routeList[$method][$piecesCount][$pattern] = $destination;
+        static::$routeList[$method][$piecesCount][$pattern] = $destination;
         $this->lastUsedPattern = $pattern;
         return $this;
     }
@@ -266,7 +281,7 @@ class Router implements RouterInterface, SingletonInterface
      */
     public function reset()
     {
-        $this->routeList = [];
+        static::$routeList = [];
     }
 
     /**
@@ -308,7 +323,7 @@ class Router implements RouterInterface, SingletonInterface
         if (null === $alias) {
             $currentUrl = $this->getResolvedUrl();
             $piecesCount = $this->getPiecesCount($currentUrl);
-            $method = $this->requestMethod;
+            $method = $this->request->method();
         } else {
             $currentUrl = $alias['pattern'];
             $piecesCount = $alias['piecesCount'];
@@ -318,11 +333,11 @@ class Router implements RouterInterface, SingletonInterface
         $this->makeSureRouteListIsNotEmpty($currentUrl);
         $this->checkMinimumRequirements($method, $piecesCount);
 
-        if (empty($this->routeList[$method][$piecesCount][$currentUrl])) {
-            return $this->advancedRoute($currentUrl, $this->routeList[$method][$piecesCount]);
+        if (empty(static::$routeList[$method][$piecesCount][$currentUrl])) {
+            return $this->advancedRoute($currentUrl, static::$routeList[$method][$piecesCount]);
         }
 
-        return $this->parseValue($this->routeList[$method][$piecesCount][$currentUrl]);
+        return $this->parseValue(static::$routeList[$method][$piecesCount][$currentUrl]);
     }
 
     /**
@@ -363,16 +378,19 @@ class Router implements RouterInterface, SingletonInterface
                         continue;
                     }
                 }
+            } else {
+                break;
             }
         }
-        ksort($matchPieces);
 
-        if (!count($params)) {
+        if (count($matchPieces) !== $urlPartsLength || !count($params)) {
             throw new RouterException(sprintf(
                 RouterConstants::getMessage(RouterConstants::INVALID_ROUTE_CODE),
                 $currentUrl
             ));
         }
+
+        ksort($matchPieces);
 
         $theKey = '/' . implode('/', $matchPieces);
 
@@ -384,6 +402,8 @@ class Router implements RouterInterface, SingletonInterface
      * @param array $args
      * @return RouteItem
      * @throws RouterException
+     * @throws \ReflectionException
+     * @throws ClassNotFoundException
      */
     private function parseValue($activeRoute, array $args = []): RouteItem
     {
@@ -391,7 +411,7 @@ class Router implements RouterInterface, SingletonInterface
         $activeRoute = $this->resolveDestination($activeRoute);
 
         if (is_object($activeRoute)) {
-            if(method_exists($activeRoute, '__toString')){
+            if (method_exists($activeRoute, '__toString')) {
                 print $activeRoute;
                 exit;
             }
@@ -413,9 +433,11 @@ class Router implements RouterInterface, SingletonInterface
         $this->routeItem = new RouteItem (
             $this->controller,
             $this->method,
-            $this->params
+            $this->params,
+            $this->middleware
         );
 
+        $this->middleware = [];
         return $this->routeItem;
     }
 
@@ -423,6 +445,8 @@ class Router implements RouterInterface, SingletonInterface
      * @param $activeRoute
      * @return mixed|string
      * @throws RouterException
+     * @throws \ReflectionException
+     * @throws ClassNotFoundException
      */
     private function resolveDestination($activeRoute)
     {
@@ -469,7 +493,7 @@ class Router implements RouterInterface, SingletonInterface
      */
     private function makeSureRouteListIsNotEmpty(string $currentUrl)
     {
-        if (empty($this->routeList)) {
+        if (empty(static::$routeList)) {
             throw new RouterException(sprintf(
                 RouterConstants::getMessage(RouterConstants::INVALID_ROUTE_CODE),
                 $currentUrl
@@ -484,7 +508,7 @@ class Router implements RouterInterface, SingletonInterface
      */
     private function checkMinimumRequirements(string $method, int $piecesCount)
     {
-        if (empty($this->routeList[$method][$piecesCount])) {
+        if (empty(static::$routeList[$method][$piecesCount])) {
             throw new RouterException('Route not found');
         }
     }
@@ -494,10 +518,10 @@ class Router implements RouterInterface, SingletonInterface
      */
     private function getResolvedUrl(): string
     {
-        $currentUrl = $this->url;
+        $currentUrl = $this->url->current();
         $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
         if (!empty($removePrefixFromUrl)) {
-            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl), strlen($removePrefixFromUrl));
+            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl) + 1, strlen($removePrefixFromUrl));
             $currentUrl = str_replace('//', '/', $currentUrl);
         }
 

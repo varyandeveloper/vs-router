@@ -1,6 +1,8 @@
 <?php
 
-namespace VS\Router;
+namespace VS\Router\RouteItem;
+
+use VS\Router\MiddlewareInterface;
 
 /**
  * Class RouteItem
@@ -24,18 +26,34 @@ class RouteItem implements RouteItemInterface
      * @var array $_params
      */
     private $_params;
+    /**
+     * @var MiddlewareInterface[] $_middleware
+     */
+    private $_middleware = [];
 
     /**
      * RouteItem constructor.
      * @param string $ctrl
      * @param string $method
      * @param array $params
+     * @param array $middleware
      */
-    public function __construct(string $ctrl, string $method, array $params)
+    public function __construct(string $ctrl, string $method, array $params, array $middleware = [])
     {
         $this->setController($ctrl);
         $this->setMethodName($method);
         $this->setParams($params);
+        $this->setMiddleware($middleware);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getNamespace(): ?string
+    {
+        $partials = explode('\\', $this->getController());
+        array_pop($partials);
+        return implode('\\', $partials);
     }
 
     /**
@@ -87,5 +105,21 @@ class RouteItem implements RouteItemInterface
     protected function setParams(array $params): void
     {
         $this->_params = $params;
+    }
+
+    /**
+     * @return MiddlewareInterface[]
+     */
+    public function getMiddleware(): array
+    {
+        return $this->_middleware;
+    }
+
+    /**
+     * @param array $middleware
+     */
+    protected function setMiddleware(array $middleware)
+    {
+        $this->_middleware = $middleware;
     }
 }
