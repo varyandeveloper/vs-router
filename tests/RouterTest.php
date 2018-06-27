@@ -13,7 +13,7 @@ class RouterTest extends \PHPUnit\Framework\TestCase
 
     public function setUp()
     {
-        $this->Router = new \VS\Router\Router(\VS\Url\Url::getInstance(), \VS\Request\Request::getInstance());
+        $this->Router = new \VS\Router\Router(new \VS\Url\Url(), new \VS\Request\Request());
         $this->Router->reset();
     }
 
