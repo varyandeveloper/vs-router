@@ -28,7 +28,7 @@ class Router implements RouterInterface
     /**
      * @var array $routeList
      */
-    private static $routeList = [];
+    protected static $routeList = [];
     /**
      * @var array $prefixes
      */
