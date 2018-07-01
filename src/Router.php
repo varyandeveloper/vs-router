@@ -26,6 +26,10 @@ class Router implements RouterInterface
      */
     protected $url;
     /**
+     * @var array $routeList
+     */
+    private static $routeList = [];
+    /**
      * @var array $prefixes
      */
     private $prefixes = [];
@@ -33,10 +37,6 @@ class Router implements RouterInterface
      * @var array $namespaces
      */
     private $namespaces = [];
-    /**
-     * @var array $routeList
-     */
-    private static $routeList = [];
     /**
      * @var string $controller
      */
