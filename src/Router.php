@@ -32,39 +32,39 @@ class Router implements RouterInterface
     /**
      * @var array $prefixes
      */
-    private $prefixes = [];
+    protected $prefixes = [];
     /**
      * @var array $namespaces
      */
-    private $namespaces = [];
+    protected $namespaces = [];
     /**
      * @var string $controller
      */
-    private $controller;
+    protected $controller;
     /**
      * @var string $controller
      */
-    private $method = 'index';
+    protected $method = 'index';
     /**
      * @var array $params
      */
-    private $params = [];
+    protected $params = [];
     /**
      * @var array $aliases
      */
-    private $aliases = [];
+    protected $aliases = [];
     /**
      * @var string $lastUsedPattern
      */
-    private $lastUsedPattern;
+    protected $lastUsedPattern;
     /**
      * @var RouterInterface $routeItem
      */
-    private $routeItem;
+    protected $routeItem;
     /**
      * @var MiddlewareInterface[] $middleware
      */
-    private $middleware = [];
+    protected $middleware = [];
 
     /**
      * Router constructor.
@@ -96,6 +96,42 @@ class Router implements RouterInterface
     public function middleware(MiddlewareInterface ...$middleware): RouterInterface
     {
         $this->middleware = $middleware;
+        return $this;
+    }
+
+    /**
+     * @param array $rules
+     * @param callable $callback
+     * @return RouterInterface
+     */
+    public function rules(array $rules, callable $callback): RouterInterface
+    {
+        if (!empty($rules['prefix'])) {
+            $this->prefixes[] = $rules['prefix'];
+        }
+
+        if (!empty($rules['namespace'])) {
+            $this->namespaces[] = $rules['namespace'];
+        }
+
+        if (!empty($rules['middleware'])) {
+            $this->middleware[] = $rules['middleware'];
+        }
+
+        $callback($this);
+
+        if (!empty($rules['prefix'])) {
+            array_pop($this->prefixes);
+        }
+
+        if (!empty($rules['namespace'])) {
+            array_pop($this->namespaces);
+        }
+
+        if (!empty($rules['middleware'])) {
+            array_pop($this->middleware);
+        }
+
         return $this;
     }
 

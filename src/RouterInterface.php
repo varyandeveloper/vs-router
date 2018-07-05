@@ -73,6 +73,13 @@ interface RouterInterface
     public function middleware(MiddlewareInterface ...$middleware): RouterInterface;
 
     /**
+     * @param array $rules
+     * @param callable $callback
+     * @return RouterInterface
+     */
+    public function rules(array $rules, callable $callback): RouterInterface;
+
+    /**
      * @param string $method
      * @param string $pattern
      * @param $destination

@@ -210,4 +210,52 @@ class RouterTest extends \PHPUnit\Framework\TestCase
         $this->expectException(BadMethodCallException::class);
         $this->Router->options('/done', 'TestCtrl');
     }
+
+    public function testRulesMethod()
+    {
+        $argument = sprintf('/%s', \VS\Router\RouterConstants::NUMBER_ARGUMENT_ALIAS);
+        $this->Router->rules([
+            'prefix' => 'categories',
+            'namespace' => 'Category\Controller',
+        ], function ($router) use ($argument) {
+            $router->REST('', 'TestController');
+            $router->get("{$argument}/sub-categories", 'TestController.subCategories');
+        });
+
+        $actual = $this->Router->getRoutes();
+
+        $expected = [
+            'GET' => [
+                1 => [
+                    '/categories' => 'Category\Controller\TestController.list',
+                ],
+                2 => [
+                    "/categories{$argument}" => 'Category\Controller\TestController.one',
+                    "{$argument}/sub-categories" => 'Category\Controller\TestController.subCategories',
+                ],
+            ],
+            'POST' => [
+                1 => [
+                    '/categories' => 'Category\Controller\TestController.save',
+                ],
+            ],
+            'PUT' => [
+                2 => [
+                    "/categories{$argument}" => 'Category\Controller\TestController.replace',
+                ],
+            ],
+            'PATCH' => [
+                2 => [
+                    "/categories$argument" => 'Category\Controller\TestController.replaceFew',
+                ],
+            ],
+            'DELETE' => [
+                2 => [
+                    "/categories$argument" => 'Category\Controller\TestController.remove',
+                ],
+            ]
+        ];
+
+        $this->assertEquals($expected, $actual);
+    }
 }
