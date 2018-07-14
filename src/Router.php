@@ -561,6 +561,6 @@ class Router implements RouterInterface
             $currentUrl = str_replace('//', '/', $currentUrl);
         }
 
-        return $currentUrl;
+        return $currentUrl ?: '/';
     }
 }
