@@ -556,8 +556,8 @@ class Router implements RouterInterface
     {
         $currentUrl = $this->url->current();
         $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
-        if (!empty($removePrefixFromUrl)) {
-            $currentUrl = substr_replace($currentUrl, '', strpos($currentUrl, $removePrefixFromUrl), strlen($removePrefixFromUrl));
+        if (!empty($removePrefixFromUrl) && ($pos = strpos($currentUrl, $removePrefixFromUrl) !== false)) {
+            $currentUrl = substr_replace($currentUrl, '', $pos, strlen($removePrefixFromUrl));
             $currentUrl = str_replace('//', '/', $currentUrl);
         }
 
