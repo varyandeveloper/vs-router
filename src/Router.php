@@ -50,10 +50,6 @@ class Router implements RouterInterface
      */
     protected $params = [];
     /**
-     * @var array $aliases
-     */
-    protected $aliases = [];
-    /**
      * @var string $lastUsedPattern
      */
     protected $lastUsedPattern;
@@ -65,6 +61,10 @@ class Router implements RouterInterface
      * @var MiddlewareInterface[] $middleware
      */
     protected $middleware = [];
+    /**
+     * @var array $aliases
+     */
+    protected static $aliases = [];
 
     /**
      * Router constructor.
@@ -84,7 +84,7 @@ class Router implements RouterInterface
     public function as(string $alias): RouterInterface
     {
         if (null !== $alias) {
-            $this->aliases[$alias] = $this->lastUsedPattern;
+            static::$aliases[$alias] = $this->lastUsedPattern;
         }
         return $this;
     }
@@ -148,7 +148,7 @@ class Router implements RouterInterface
                 ->post('/', "$controller.store")
                 ->get('/create', "$controller.create")
                 ->put($argument, "$controller.update")
-                ->patch($argument, "$controller.update")
+                ->patch($argument, "$controller.updateFew")
                 ->get($argument, "$controller.show")
                 ->get("{$argument}/edit", "$controller.edit")
                 ->delete($argument, "$controller.destroy");
@@ -186,14 +186,15 @@ class Router implements RouterInterface
     public function AUTH(string $prefix, string $controller, string $namespace = ''): RouterInterface
     {
         $namespace = rtrim($namespace, '\\') . '\\';
+        if ($namespace === '\\') {
+            $namespace = '';
+        }
         $this->prefix($prefix, function (RouterInterface $router) use ($controller, $namespace) {
-            $router->namespace((string)$namespace, function (RouterInterface $router) use ($controller) {
-                $router->get('/login', "$controller.login")->as('login');
-                $router->post('/login', "$controller.login")->as('post.login');
-                $router->get('/register', "$controller.register")->as('register');
-                $router->post('/register', "$controller.register")->as('post.register');
-                $router->get('/logout', "$controller.logout")->as('logout');
-            });
+            $router->get('/login', "{$namespace}{$controller}.login")->as('login');
+            $router->post('/login', "{$namespace}{$controller}.loginPost")->as('post.login');
+            $router->get('/register', "{$namespace}{$controller}.register")->as('register');
+            $router->post('/register', "{$namespace}{$controller}.registerPost")->as('post.register');
+            $router->post('/logout', "{$namespace}{$controller}.logout")->as('logout');
         });
 
         return $this;
@@ -207,13 +208,13 @@ class Router implements RouterInterface
      */
     public function getByAlias(string $alias, array $params = []): string
     {
-        if (empty($this->aliases[$alias])) {
+        if (empty(static::$aliases[$alias])) {
             throw new RouterException(sprintf(
                 RouterConstants::getMessage(RouterConstants::INVALID_ALIAS_CODE),
                 $alias
             ));
         }
-        $result = $this->aliases[$alias];
+        $result = static::$aliases[$alias];
         $count = count($params);
         $patterns = [];
 
@@ -354,7 +355,7 @@ class Router implements RouterInterface
      * @throws RouterException
      * @throws \Throwable
      */
-    private function getCurrent(array $alias = null): RouteItem
+    protected function getCurrent(array $alias = null): RouteItem
     {
         if (null === $alias) {
             $currentUrl = $this->getResolvedUrl();
@@ -383,7 +384,7 @@ class Router implements RouterInterface
      * @throws RouterException
      * @throws \Throwable
      */
-    private function advancedRoute(string $currentUrl, array $routeList): RouteItem
+    protected function advancedRoute(string $currentUrl, array $routeList): RouteItem
     {
         $matchPieces = [];
         $params = [];
@@ -441,7 +442,7 @@ class Router implements RouterInterface
      * @throws \ReflectionException
      * @throws ClassNotFoundException
      */
-    private function parseValue($activeRoute, array $args = []): RouteItem
+    protected function parseValue($activeRoute, array $args = []): RouteItem
     {
         $this->params = $args;
         $activeRoute = $this->resolveDestination($activeRoute);
@@ -484,7 +485,7 @@ class Router implements RouterInterface
      * @throws \ReflectionException
      * @throws ClassNotFoundException
      */
-    private function resolveDestination($activeRoute)
+    protected function resolveDestination($activeRoute)
     {
         if (is_string($activeRoute)) {
             return $activeRoute;
@@ -511,7 +512,7 @@ class Router implements RouterInterface
      * @return string
      * @throws RouterException
      */
-    private function resolveArrayRoute(array $activeRoute): string
+    protected function resolveArrayRoute(array $activeRoute): string
     {
         if (empty($activeRoute['controller']) && empty($activeRoute[0])) {
             throw new RouterException(RouterConstants::getMessage(RouterConstants::INVALID_ARRAY_CODE));
@@ -527,7 +528,7 @@ class Router implements RouterInterface
      * @param string $currentUrl
      * @throws RouterException
      */
-    private function makeSureRouteListIsNotEmpty(string $currentUrl)
+    protected function makeSureRouteListIsNotEmpty(string $currentUrl)
     {
         if (empty(static::$routeList)) {
             throw new RouterException(sprintf(
@@ -542,7 +543,7 @@ class Router implements RouterInterface
      * @param int $piecesCount
      * @throws RouterException
      */
-    private function checkMinimumRequirements(string $method, int $piecesCount)
+    protected function checkMinimumRequirements(string $method, int $piecesCount)
     {
         if (empty(static::$routeList[$method][$piecesCount])) {
             throw new RouterException('Route not found');
@@ -552,7 +553,7 @@ class Router implements RouterInterface
     /**
      * @return string
      */
-    private function getResolvedUrl(): string
+    protected function getResolvedUrl(): string
     {
         $currentUrl = $this->url->current();
         $removePrefixFromUrl = RouterConstants::getSegmentsToAvoidAsString();
