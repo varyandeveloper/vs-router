@@ -304,7 +304,7 @@ class Router implements RouterInterface
 
         $piecesCount = $this->getPiecesCount($pattern);
 
-        if (!empty($this->namespaces)) {
+        if (!empty($this->namespaces) && is_string($destination)) {
             $destination = implode('\\', $this->namespaces) . '\\' . $destination;
         }
 
