@@ -143,7 +143,7 @@ class Router implements RouterInterface
     public function CRUD(string $prefix, string $controller): RouterInterface
     {
         $this->prefix($prefix, function (RouterInterface $router) use ($controller) {
-            $argument = sprintf('\%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
+            $argument = sprintf('/%s', RouterConstants::NUMBER_ARGUMENT_ALIAS);
             $router->get('/', "$controller.index")
                 ->post('/', "$controller.store")
                 ->get('/create', "$controller.create")
