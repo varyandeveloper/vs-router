@@ -60,7 +60,7 @@ class Router implements RouterInterface
     /**
      * @var MiddlewareInterface[] $middleware
      */
-    protected $middleware = [];
+    protected static $middleware = [];
     /**
      * @var array $aliases
      */
@@ -95,7 +95,7 @@ class Router implements RouterInterface
      */
     public function middleware(MiddlewareInterface ...$middleware): RouterInterface
     {
-        $this->middleware = $middleware;
+        self::$middleware = $middleware;
         return $this;
     }
 
@@ -115,7 +115,7 @@ class Router implements RouterInterface
         }
 
         if (!empty($rules['middleware'])) {
-            $this->middleware[] = $rules['middleware'];
+            self::$middleware[] = $rules['middleware'];
         }
 
         $callback($this);
@@ -129,7 +129,7 @@ class Router implements RouterInterface
         }
 
         if (!empty($rules['middleware'])) {
-            array_pop($this->middleware);
+            array_pop(self::$middleware);
         }
 
         return $this;
@@ -471,10 +471,10 @@ class Router implements RouterInterface
             $this->controller,
             $this->method,
             $this->params,
-            $this->middleware
+            self::$middleware
         );
 
-        $this->middleware = [];
+        self::$middleware = [];
         return $this->routeItem;
     }
 
